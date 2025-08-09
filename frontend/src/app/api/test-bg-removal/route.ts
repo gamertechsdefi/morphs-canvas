@@ -16,8 +16,15 @@ export async function POST(request: NextRequest) {
 
     const backendUrl = process.env.BACKEND_URL || "http://localhost:5000";
     const forwardForm = new FormData();
-    const fileName = (file as any)?.name || "upload.png";
-    const mimeType = (file as any)?.type || "image/png";
+  let fileName = "upload.png";
+  let mimeType = "image/png";
+  // Type guard for File
+  if (typeof file === "object" && file !== null && "name" in file && typeof (file as File).name === "string") {
+    fileName = (file as File).name;
+  }
+  if (typeof file === "object" && file !== null && "type" in file && typeof (file as File).type === "string") {
+    mimeType = (file as File).type;
+  }
     forwardForm.append("image", new Blob([await file.arrayBuffer()], { type: mimeType }), fileName);
 
     const bgRes = await fetch(`${backendUrl}/remove-background`, {
