@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: morph-canvas-backend
+Version: 0.1.0
+Summary: FastAPI backend for Morph Canvas: background removal (rembg) and tinting
+Requires-Python: >=3.9
+Requires-Dist: fastapi>=0.111.0
+Requires-Dist: uvicorn[standard]>=0.30.0
+Requires-Dist: pillow>=10.0.0
+Requires-Dist: rembg>=2.0.56
+Requires-Dist: python-multipart>=0.0.9

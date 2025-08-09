@@ -1,0 +1,2 @@
+[console_scripts]
+start = morph_canvas_backend.__main__:main
