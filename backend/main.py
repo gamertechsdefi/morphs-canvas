@@ -5,8 +5,11 @@ from rembg import remove
 from PIL import Image
 import io
 import base64
-import uvicorn
-import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Morph Canvas Backend", version="0.1.0")
 
@@ -35,6 +38,7 @@ def _bytes_to_data_url_png(data: bytes) -> str:
 
 @app.get("/health")
 async def health() -> dict:
+    logger.info("Health endpoint called")
     return {"status": "ok"}
 
 @app.post("/remove-background")
@@ -44,23 +48,22 @@ async def remove_background_endpoint(image: UploadFile = File(...)) -> JSONRespo
         if not content:
             raise HTTPException(status_code=400, detail="Empty file uploaded")
 
-        # rembg works directly on bytes
-        output_bytes = remove(content)
+        logger.info("Processing image with rembg")
+        output_bytes = remove(content, model_name="u2netp")  # Use lighter model
         if not output_bytes:
             raise HTTPException(status_code=500, detail="rembg produced empty output")
 
-        # Ensure valid PNG output
         try:
             img = Image.open(io.BytesIO(output_bytes)).convert("RGBA")
             output_bytes = _to_png_bytes(img)
         except Exception:
-            # If bytes are already PNG-like, keep as is
             pass
 
         return JSONResponse({"processedImageUrl": _bytes_to_data_url_png(output_bytes)})
     except HTTPException:
         raise
     except Exception as exc:
+        logger.error(f"Background removal failed: {exc}")
         raise HTTPException(status_code=500, detail=f"Background removal failed: {exc}")
 
 @app.post("/tint")
@@ -78,7 +81,6 @@ async def tint_endpoint(
 
         base = Image.open(io.BytesIO(content)).convert("RGBA")
 
-        # Apply simple linear interpolation tint on non-transparent pixels
         pixels = base.load()
         width, height = base.size
         for y in range(height):
@@ -95,9 +97,13 @@ async def tint_endpoint(
     except HTTPException:
         raise
     except Exception as exc:
+        logger.error(f"Tinting failed: {exc}")
         raise HTTPException(status_code=500, detail=f"Tinting failed: {exc}")
 
+# Optional: For local testing only
 if __name__ == "__main__":
-    # Use the PORT environment variable, default to 8000 for local development
+    import uvicorn
+    import os
     port = int(os.environ.get("PORT", 8000))
+    logger.info(f"Starting server on 0.0.0.0:{port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
