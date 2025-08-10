@@ -5,7 +5,8 @@ from rembg import remove
 from PIL import Image
 import io
 import base64
-
+import uvicorn
+import os
 
 app = FastAPI(title="Morph Canvas Backend", version="0.1.0")
 
@@ -23,22 +24,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 def _to_png_bytes(image: Image.Image) -> bytes:
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     return buffer.getvalue()
 
-
 def _bytes_to_data_url_png(data: bytes) -> str:
     b64 = base64.b64encode(data).decode("ascii")
     return f"data:image/png;base64,{b64}"
 
-
 @app.get("/health")
 async def health() -> dict:
     return {"status": "ok"}
-
 
 @app.post("/remove-background")
 async def remove_background_endpoint(image: UploadFile = File(...)) -> JSONResponse:
@@ -65,7 +62,6 @@ async def remove_background_endpoint(image: UploadFile = File(...)) -> JSONRespo
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Background removal failed: {exc}")
-
 
 @app.post("/tint")
 async def tint_endpoint(
@@ -101,4 +97,7 @@ async def tint_endpoint(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Tinting failed: {exc}")
 
-
+if __name__ == "__main__":
+    # Use the PORT environment variable, default to 8000 for local development
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
