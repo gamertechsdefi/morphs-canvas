@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log("Delegating background removal to backend...");
 
-    const backendUrl = "https://morphs-canvas.onrender.com";
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
     const forwardForm = new FormData();
   let safeFileName = "upload.png";
   let safeMimeType = "image/png";
