@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from rembg import remove
+from rembg import remove, new_session
 from PIL import Image
 import io
 import base64
@@ -27,6 +27,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Create a session for the model
+session = new_session("u2netp")
+
 def _to_png_bytes(image: Image.Image) -> bytes:
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
@@ -49,7 +52,7 @@ async def remove_background_endpoint(image: UploadFile = File(...)) -> JSONRespo
             raise HTTPException(status_code=400, detail="Empty file uploaded")
 
         logger.info("Processing image with rembg")
-        output_bytes = remove(content, model_name="u2netp")  # Use lighter model
+        output_bytes = remove(content, session=session)  # Use session
         if not output_bytes:
             raise HTTPException(status_code=500, detail="rembg produced empty output")
 
