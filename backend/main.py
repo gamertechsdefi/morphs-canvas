@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 # Create a session for the model
-session = new_session("u2netp")
+session = new_session("silueta")
 
 def _to_png_bytes(image: Image.Image) -> bytes:
     buffer = io.BytesIO()
